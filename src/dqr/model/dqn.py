@@ -1,39 +1,38 @@
 import numpy as np
-import pandas as pd
-import random
-from sklearn.utils import shuffle
 import torch
-import torch.nn as nn
 import torch.autograd as autograd
+import torch.nn as nn
 from torchcontrib.optim import SWA
-from collections import deque
 
-from preprocess import *
+from dqr.util.preprocess import get_model_inputs, get_multiple_model_inputs
+
 
 class DQN(nn.Module):
-    
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.fc = nn.Sequential( \
-            nn.Linear(self.input_dim[0], 32), \
-            nn.ReLU(), \
-            nn.Linear(32, self.output_dim))
+        self.fc = nn.Sequential(
+            nn.Linear(self.input_dim[0], 32), nn.ReLU(), nn.Linear(32, self.output_dim)
+        )
 
     def forward(self, state):
         return self.fc(state)
-    
-class DQNAgent:
 
-    def __init__(self, input_dim, dataset,
-                 learning_rate=3e-4, 
-                 gamma=0.99,
-                 buffer=None,
-                 buffer_size=10000, 
-                 tau=0.999,
-                 swa=False,
-                 pre_trained_model=None):
+
+class DQNAgent:
+    def __init__(
+        self,
+        input_dim,
+        dataset,
+        learning_rate=3e-4,
+        gamma=0.99,
+        buffer=None,
+        buffer_size=10000,
+        tau=0.999,
+        swa=False,
+        pre_trained_model=None,
+    ):
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.tau = tau
@@ -42,13 +41,13 @@ class DQNAgent:
             self.model = pre_trained_model
         base_opt = torch.optim.Adam(self.model.parameters())
         self.swa = swa
-        self.dataset=dataset
+        self.dataset = dataset
         self.MSE_loss = nn.MSELoss()
         self.replay_buffer = buffer
         if swa:
-          self.optimizer = SWA(base_opt, swa_start=10, swa_freq=5, swa_lr=0.05)
+            self.optimizer = SWA(base_opt, swa_start=10, swa_freq=5, swa_lr=0.05)
         else:
-          self.optimizer = base_opt
+            self.optimizer = base_opt
 
     def get_action(self, state, dataset=None):
         if dataset is None:
@@ -61,16 +60,24 @@ class DQNAgent:
 
     def compute_loss(self, batch, dataset, verbose=False):
         states, actions, rewards, next_states, dones = batch
-        model_inputs = np.array([get_model_inputs(states[i], actions[i], dataset)\
-            for i in range(len(states))])
+        model_inputs = np.array(
+            [
+                get_model_inputs(states[i], actions[i], dataset)
+                for i in range(len(states))
+            ]
+        )
         model_inputs = torch.FloatTensor(model_inputs)
 
         rewards = torch.FloatTensor(rewards)
         dones = torch.FloatTensor(dones)
 
         curr_Q = self.model.forward(model_inputs)
-        model_inputs = np.array([get_model_inputs(next_states[i], actions[i], dataset) \
-            for i in range(len(next_states))])
+        model_inputs = np.array(
+            [
+                get_model_inputs(next_states[i], actions[i], dataset)
+                for i in range(len(next_states))
+            ]
+        )
         model_inputs = torch.FloatTensor(model_inputs)
         next_Q = self.model.forward(model_inputs)
         max_next_Q = torch.max(next_Q, 1)[0]
