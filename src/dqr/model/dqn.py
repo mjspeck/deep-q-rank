@@ -1,10 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
 from torchcontrib.optim import SWA
 
+from dqr.model.mdp import BasicBuffer, State
 from dqr.util.preprocess import get_model_inputs, get_multiple_model_inputs
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 class DQN(nn.Module):
@@ -13,7 +21,7 @@ class DQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.fc = nn.Sequential(
-            nn.Linear(self.input_dim[0], 32), nn.ReLU(), nn.Linear(32, self.output_dim)
+            nn.Linear(self.input_dim, 32), nn.ReLU(), nn.Linear(32, self.output_dim)
         )
 
     def forward(self, state):
@@ -23,15 +31,15 @@ class DQN(nn.Module):
 class DQNAgent:
     def __init__(
         self,
-        input_dim,
-        dataset,
-        learning_rate=3e-4,
-        gamma=0.99,
-        buffer=None,
-        buffer_size=10000,
-        tau=0.999,
-        swa=False,
-        pre_trained_model=None,
+        input_dim: int,
+        dataset: pd.DataFrame,
+        learning_rate: float = 3e-4,
+        gamma: float = 0.99,
+        buffer: BasicBuffer | None = None,
+        buffer_size: int = 10000,
+        tau: float = 0.999,
+        swa: bool = False,
+        pre_trained_model: DQN | None = None,
     ):
         self.learning_rate = learning_rate
         self.gamma = gamma
@@ -49,7 +57,7 @@ class DQNAgent:
         else:
             self.optimizer = base_opt
 
-    def get_action(self, state, dataset=None):
+    def get_action(self, state: State, dataset: pd.DataFrame | None = None):
         if dataset is None:
             dataset = self.dataset
         inputs = get_multiple_model_inputs(state, state.remaining, dataset)

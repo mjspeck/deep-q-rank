@@ -4,10 +4,11 @@ dependencies = [
     "matplotlib>=3.9.2",
     "numpy>=2.1.2",
     "pandas>=2.2.3",
+    "scikit-learn>=1.5.2",
     "scipy>=1.14.1",
     "torch>=2.5.0",
-    "scikit-learn>=1.5.2",
     "torchcontrib>=0.0.2",
+    "tqdm>=4.66.5",
 ]
 description = "Python implementation of Deep Q Rank Agent."
 license = { text = "MIT" }
@@ -20,18 +21,84 @@ version = "0.1.0"
 build-backend = "pdm.backend"
 requires = ["pdm-backend"]
 
+[project.scripts]
+dqr-train = "dqr.run.train_script:main"
 
 [tool.pdm]
 distribution = true
 
 [tool.pdm.dev-dependencies]
 dev = [
-    "ruff>=0.7.0",
-    "docformatter[tomli]>=1.7.5",
     "better-exceptions>=0.3.3",
+    "docformatter[tomli]>=1.7.5",
     "mypy>=1.12.0",
+    "ruff>=0.7.0",
 ]
-test = [
-    "pytest>=8.3.3",
-    "pytest-cov>=5.0.0",
+notebooks = ["ipykernel>=6.29.5", "jupyter>=1.1.1"]
+test = ["pytest-cov>=5.0.0", "pytest>=8.3.3"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["dqr"]
+
+[tool.isort]
+include_trailing_comma = true
+multi_line_output = 3
+
+[tool.mypy]
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+exclude = ["notebooks/*", "scripts/", "tests/*"]
+files = "src/"
+follow_imports = "silent"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = ["--cov-report=html", "--cov=src/executor"]
+testpaths = ["tests"]
+
+[tool.docformatter]
+black = true
+exclude = ["_version.py", "notebooks", "scripts"]
+recursive = true
+wrap-descriptions = 88
+wrap-summaries = 88
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = ["pydantic"]
+
+[tool.ruff.lint]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "__pypackages__",
+    "_build",
+    "_version.py",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "notebooks/*",
+    "scripts",
+    "tests/*",
+    "venv",
 ]
+extend-select = ["D", "I"]
+
+ignore = ["D100", "D101", "D104", "D105", "D106"]

@@ -1,15 +1,23 @@
+from __future__ import annotations
+
 import random
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.stats import kendalltau, spearmanr
 
 from dqr.model.mdp import State, compute_reward
 
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from dqr.model.dqn import DQNAgent
+
 random.seed(2)
 
 
 def dcg_at_k(r, k, method=0):
-    r = np.asfarray(r)[:k]  # todo: convert to numpy.asarray with float dtype
+    r = np.asarray(r, dtype=float)[:k]
     if r.size:
         if method == 0:
             return r[0] + np.sum(r[1:] / np.log2(np.arange(2, r.size + 1)))
@@ -91,7 +99,7 @@ def evaluate_ranking(r, qid, k, dataset):
     return ndcg_at_k(relevance_list, k)
 
 
-def reward_from_query(agent, qid, df):
+def reward_from_query(agent: DQNAgent, qid: str, df: pd.DataFrame):
     """
     Run agent to rank a whole (single) query
     agent: DQN agent
@@ -101,17 +109,17 @@ def reward_from_query(agent, qid, df):
     remaining = list(filtered_df["doc_id"])
     state = State(0, qid, remaining)
     total_reward, t = 0, 0
-    while not state.terminal:
+    while not state.terminal():
         next_action = agent.get_action(state)
         t += 1
         remaining.remove(next_action)
         state = State(t, qid, remaining)
-        reward = compute_reward(t, get_rank(qid, next_action, letor))
+        reward = compute_reward(t, get_rank(qid, next_action, filtered_df))
         total_reward += reward
     return total_reward
 
 
-def get_agent_ranking(agent, qid, df):
+def get_agent_ranking(agent: DQNAgent, qid: str, df: pd.DataFrame):
     """
     Run agent to rank a whole (single) query and get list
     agent: DQN agent
@@ -132,7 +140,7 @@ def get_agent_ranking(agent, qid, df):
     return ranking
 
 
-def get_true_ranking(qid, dataset):
+def get_true_ranking(qid: str, dataset: pd.DataFrame):
     """
     @qid: string query id
     @return List<doc_id strings>

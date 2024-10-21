@@ -7,9 +7,7 @@ import numpy as np
 
 
 def compute_reward(t, relevance):
-    """
-    Reward function for MDP
-    """
+    """Compute reward function for MDP."""
     if t == 0:
         return 0
     return relevance / np.log2(t + 1)
