@@ -54,6 +54,9 @@ def main():
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Print more logs.")
     parser.add_argument("--seed", "-s", type=int, help="Random seed.", default=2)
+    parser.add_argument(
+        "--epochs", "-e", type=int, help="Number of epochs", default=EPOCHS
+    )
 
     args = parser.parse_args()
     seed = args.seed
@@ -79,7 +82,7 @@ def main():
 
     # Begin Training
     y, z = [], []
-    for i in tqdm(range(EPOCHS)):
+    for i in tqdm(range(args.epochs)):
         # print("Beginning Iteration {}\n".format(i))
         y.append(agent.update(1, verbose=args.verbose))
         z.append(
