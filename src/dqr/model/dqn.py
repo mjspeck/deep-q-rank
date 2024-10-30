@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class DQN(nn.Module):
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim: int, output_dim: int):
         super(DQN, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -48,7 +48,6 @@ class DQNAgent:
         if pre_trained_model:
             self.model = pre_trained_model
         base_opt = torch.optim.Adam(self.model.parameters())
-        self.swa = swa
         self.dataset = dataset
         self.MSE_loss = nn.MSELoss()
         self.replay_buffer = buffer
@@ -103,6 +102,6 @@ class DQNAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        if self.swa:
+        if isinstance(self.optimizer, SWA):
             self.optimizer.swap_swa_sgd()
         return train_loss

@@ -54,7 +54,7 @@ follow_imports = "silent"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-addopts = ["--cov-report=html", "--cov=src/executor"]
+addopts = ["--cov-report=html", "--cov=src/dqr"]
 testpaths = ["tests"]
 
 [tool.docformatter]
