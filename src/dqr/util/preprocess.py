@@ -1,3 +1,5 @@
+# ruff: noqa
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,6 +9,8 @@ import pandas as pd
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from dqr.model.mdp import State
 
 
 def load_letor(filepath: Path) -> pd.DataFrame:
@@ -52,17 +56,17 @@ def load_letor(filepath: Path) -> pd.DataFrame:
     return df
 
 
-def get_model_inputs(state, action, dataset):
+def get_model_inputs(state: State, action: str, dataset: pd.DataFrame):
     return np.array([state.t] + get_features(state.qid, action, dataset))
 
 
-def get_multiple_model_inputs(state, doc_list, dataset):
+def get_multiple_model_inputs(state, doc_list, dataset: pd.DataFrame):
     return np.insert(
         get_query_features(state.qid, doc_list, dataset), 0, state.t, axis=1
     )
 
 
-def get_features(qid, doc_id, dataset):
+def get_features(qid: int, doc_id: str, dataset: pd.DataFrame):
     qid, doc_id = int(qid), str(doc_id)
     df = dataset[dataset["doc_id"].str.contains(doc_id)][dataset["qid"] == qid]
     assert len(df) != 0, "Fix the dataset"
@@ -70,7 +74,7 @@ def get_features(qid, doc_id, dataset):
     return df.values.tolist()[0]
 
 
-def get_query_features(qid, doc_list, dataset):
+def get_query_features(qid: int, doc_list, dataset):
     doc_set = set(doc_list)
     qid = int(qid)
     if len(doc_list) > 0:

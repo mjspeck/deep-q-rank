@@ -29,7 +29,7 @@ OUTPUT_DIR = Path(os.getcwd()) / "output"
 # END USER VARIABLES
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--training-path",
@@ -56,6 +56,9 @@ def main():
     parser.add_argument("--seed", "-s", type=int, help="Random seed.", default=2)
     parser.add_argument(
         "--epochs", "-e", type=int, help="Number of epochs", default=EPOCHS
+    )
+    parser.add_argument(
+        "--batch-size", type=int, help="Number of samples per batch", default=1
     )
 
     args = parser.parse_args()
@@ -84,9 +87,11 @@ def main():
     y, z = [], []
     for i in tqdm(range(args.epochs)):
         # print("Beginning Iteration {}\n".format(i))
-        y.append(agent.update(1, verbose=args.verbose))
+        y.append(agent.update(args.batch_size, verbose=args.verbose))
         z.append(
-            agent.compute_loss(val_buffer.sample(1), val_set, verbose=args.verbose)
+            agent.compute_loss(
+                val_buffer.sample(args.batch_size), val_set, verbose=args.verbose
+            )
         )
 
     # Save Model

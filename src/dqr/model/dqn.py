@@ -14,6 +14,8 @@ from dqr.util.preprocess import get_model_inputs, get_multiple_model_inputs
 if TYPE_CHECKING:
     import pandas as pd
 
+    from dqr.model.mdp import Batch
+
 
 class DQN(nn.Module):
     def __init__(self, input_dim: int, output_dim: int):
@@ -50,13 +52,13 @@ class DQNAgent:
         base_opt = torch.optim.Adam(self.model.parameters())
         self.dataset = dataset
         self.MSE_loss = nn.MSELoss()
-        self.replay_buffer = buffer
+        self.replay_buffer = buffer or BasicBuffer(30000)
         if swa:
             self.optimizer = SWA(base_opt, swa_start=10, swa_freq=5, swa_lr=0.05)
         else:
             self.optimizer = base_opt
 
-    def get_action(self, state: State, dataset: pd.DataFrame | None = None):
+    def get_action(self, state: State, dataset: pd.DataFrame | None = None) -> str:
         if dataset is None:
             dataset = self.dataset
         inputs = get_multiple_model_inputs(state, state.remaining, dataset)
@@ -65,7 +67,12 @@ class DQNAgent:
         value, index = expected_returns.max(1)
         return state.remaining[index[0]]
 
-    def compute_loss(self, batch, dataset, verbose=False):
+    def compute_loss(
+        self,
+        batch: Batch,
+        dataset,
+        verbose=False,
+    ) -> torch.Tensor:
         states, actions, rewards, next_states, dones = batch
         model_inputs = np.array(
             [
